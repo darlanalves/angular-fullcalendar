@@ -1,0 +1,29 @@
+@import "base";
+
+.sidebar {
+	float: left;
+	width: 30%;
+	padding: $default-spacing
+
+	h2 {
+		font-size: 2rem;
+	}
+
+	.menu {
+		border-bottom: 1px solid #eee;
+	}
+
+	li {
+		display: block;
+	}
+
+	li > a {
+		display: block;
+		padding: $default-spacing 2*$default-spacing;
+		transition: background 0.2s;
+
+		&:hover {
+			background: #ddd;
+		}
+	}
+}
