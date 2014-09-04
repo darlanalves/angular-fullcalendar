@@ -1,4 +1,4 @@
-$module.factory('CalendarLocale', function() {
+$module.factory('FullCalendarLocale', function() {
 	var strings = {};
 
 	function setValues(values) {

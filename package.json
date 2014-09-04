@@ -1,35 +1,40 @@
 {
-	"name": "angular-fullcalendar",
-	"description": "AngularJS integration with Arshaw FullCalendar",
-	"version": "0.1.0",
-	"dependencies": {
-		"express": "^4.4.3"
-	},
-	"devDependencies": {
-		"gulp": "~3.8.0",
-		"gulp-concat": "~2.2.0",
-		"gulp-sass": "~0.7.2",
-		"gulp-templatecache": "~0.0.2",
-		"gulp-uglify": "~0.3.0",
-		"gulp-util": "^2.2.17",
-		"gulp-rename": "^1.2.0",
-		"gulp-wrap": "^0.3.0",
-		"multipipe": "^0.1.1",
-		"karma": "~0.12.16",
-		"karma-coverage": "^0.2.4",
-		"karma-jasmine": "^0.1.5",
-		"karma-phantomjs-launcher": "^0.1.4"
-	},
-	"scripts": {
-		"test": "./node_modules/karma/bin/karma start test/karma.conf.js --single-run",
-		"start": "server.js"
-	},
-	"author": {
-		"name": "Darlan Alves ",
-		"email": "me@darlanalv.es"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git@github.com:darlanalves/angular-fullcalendar.git"
-	}
+  "name": "angular-fullcalendar",
+  "version": "0.1.0",
+  "description": "FullCalendar integration with AngularJS",
+  "main": "./dist/index.js",
+  "keywords": [
+    "angularjs",
+    "ngmodule"
+  ],
+  "license": "ISC",
+  "files": [
+    "./package.json",
+    "./dist/index.js"
+  ],
+  "private": true,
+  "dependencies": {
+    "gulp": "3.8.1",
+    "gulp-util": "^2.2.17",
+    "async": "^0.9.0",
+    "angular": "^1.2.23"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/darlanalves/angular-fullcalendar.git"
+  },
+  "devDependencies": {
+    "gulp": "^3.8.1",
+    "gulp-rename": "^1.2.0",
+    "gulp-wrapper": "^0.1.5",
+    "gulp-concat": "^2.3.5",
+    "gulp-uglify": "^1.0.1",
+    "gulp-bower-src": "^0.1.0",
+    "karma": "^0.12.23",
+    "multipipe": "^0.1.1",
+    "gulp-filter": "^1.0.1",
+    "gulp-wrap": "^0.3.0",
+    "karma-jasmine": "^0.1.5",
+    "karma-phantomjs-launcher": "^0.1.4"
+  }
 }

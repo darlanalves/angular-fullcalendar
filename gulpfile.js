@@ -1,150 +1,159 @@
-var gulp = require('gulp'),
-	util = require('gulp-util'),
-	concat = require('gulp-concat'),
-	sass = require('gulp-sass'),
+/* global require,module,__dirname*/
+'use strict';
+
+var events = require('events'),
+	gulp = require('gulp'),
+	buildEvents = new events.EventEmitter(),
+	multipipe = require('multipipe'),
 	uglify = require('gulp-uglify'),
+	concat = require('gulp-concat'),
 	rename = require('gulp-rename'),
-	templateCache = require('gulp-templatecache'),
 	wrap = require('gulp-wrap'),
-	pipeline = require('multipipe'),
-	colors = util.colors,
-	log = util.log,
-	spawn = require('child_process').spawn,
+	filter = require('gulp-filter'),
+	karma = require('karma').server,
+	bowerFiles = require('main-bower-files'),
+	fs = require('fs'),
+
+	renameOptions = {
+		suffix: '.min'
+	},
+
+	sourceFiles = ['src/module.js', 'src/**/*.js'],
+
+	filterJsFiles = filter('**/*.js', '!**/*.min.js'),
 
 	// NOTE: don't join the template strings, it will break Slush!
-	wrapper = '(function(undefined){\n\n<' + '%= contents %>\n}());';
+	moduleWrapper = '(function(undefined){\n\n<' + '%= contents %>\n}());',
+	browserifyWrapper = fs.readFileSync('./browserify-wrapper.js', 'utf8'),
+	bundleWrapper = '(function(window, undefined){\n\n<' + '%= contents %>\n}(this));';
 
-gulp.task('min-web', function() {
-	var pipe = pipeline(
-		gulp.src(['web/module.js', 'web/routes.js', 'web/**/*.js']),
-		concat('app.js'),
-		wrap(wrapper),
-		uglify(),
-		gulp.dest('public')
-	);
+browserifyWrapper = browserifyWrapper.replace('# content #', '<' + '%= contents %>');
 
-	pipe.on('error', createLogger('min-web'));
-	return pipe;
-});
+module.exports = buildEvents;
 
-gulp.task('min-lib', function() {
-	var pipe = pipeline(
-		gulp.src(['src/fullcalendar/module.js', 'src/fullcalendar/*.js']),
-		concat('fullcalendar.js'),
-		wrap(wrapper),
-		gulp.dest('dist'),
-		uglify(),
-		rename({
-			suffix: '.min'
-		}),
-		gulp.dest('dist')
-	);
-
-	pipe.on('error', createLogger('min-lib'));
-	return pipe;
-});
-
-gulp.task('min', ['min-lib', 'min-web']);
-
-gulp.task('sass', function() {
-	var pipe = pipeline(
-		gulp.src('scss/**/*.scss'),
-		sass({
-			outputStyle: 'nested',
-			errLogToConsole: true
-		}),
-		concat('app.css'),
-		gulp.dest('public')
-	);
-
-	pipe.on('error', createLogger('sass'));
-	return pipe;
-});
-
-gulp.task('mocks', function() {
-	var pipe = pipeline(
-		gulp.src(['mocks/module.js', 'mocks/**/*.js']),
-		concat('mocks.js'),
-		wrap(wrapper),
-		gulp.dest('public')
-	);
-
-	pipe.on('error', createLogger('mocks'));
-	return pipe;
-})
-
-
-gulp.task('views', function() {
-	var pipe = pipeline(
-		gulp.src('views/**/*.html'),
-		templateCache({
-			output: 'views.js',
-			strip: 'views',
-			moduleName: 'app',
-			minify: {
-				collapseBooleanAttributes: true,
-				collapseWhitespace: true
-			}
-		}),
-		gulp.dest('public')
-	);
-
-	pipe.on('error', createLogger('views'));
-	return pipe;
-});
-
-gulp.task('serve', function() {
-	require('./server');
-});
-
-function startTests(confFile) {
-	var karma = spawn('./node_modules/karma/bin/karma', ['start', 'test/' + confFile]);
-
-	karma.stderr.on('data', function(data) {
-		console.log('' + data);
-	});
-
-	karma.stdout.on('data', function(data) {
-		console.log('' + data);
-	});
-
-	karma.on('close', function(code) {
-		if (code !== 0) {
-			console.log('Karma exited with code ' + code);
-		}
-	});
-
-	return karma;
+function taskError(task, error) {
+	buildEvents.emit('err', error);
 }
 
-gulp.task('test', function() {
-	return startTests('lib.conf.js')
-});
+function taskDone(task) {
+	buildEvents.emit(task);
+}
 
-gulp.task('test-web', function() {
-	return startTests('web.conf.js')
-});
-
+gulp.task('default', ['build', 'test', 'watch']);
+gulp.task('test', runKarma);
+gulp.task('build:all', ['build', 'build:browserify', 'build:bundle']);
+gulp.task('build', buildModuleFile);
+gulp.task('build:browserify', buildBrowserifyFile);
+gulp.task('build:bundle', buildBundleFile);
+gulp.task('minify', minifyModuleFiles);
+gulp.task('minify:bundle', minifyBundleFiles);
 gulp.task('watch', function() {
-	gulp.watch('src/fullcalendar/*.js', ['min-lib']);
-	gulp.watch('web/**/*.js', ['min-web']);
-	gulp.watch('scss/**/*.scss', ['sass']);
-	gulp.watch('views/**/*.html', ['views']);
-	gulp.watch('mocks/**/*.js', ['mocks']);
+	gulp.watch(['src/module.js', 'src/**/*.js'], ['build']);
 });
 
-gulp.task('build', ['min', 'sass', 'mocks', 'views'])
+function runKarma(done) {
+	karma.start({
+		configFile: __dirname + '/test/karma.conf.js',
+		singleRun: true
+	}, function(exitCode) {
+		if (0 === exitCode) {
+			taskDone('test');
+			done();
+		} else {
+			var error = new Error('Karma failed: ' + exitCode);
+			taskError('test', error);
+			done(error);
+		}
+	});
+}
 
-gulp.task('default', ['min', 'sass', 'mocks', 'views', 'watch']);
+function buildModuleFile(done) {
+	var pipe = multipipe(
+		gulp.src(sourceFiles),
+		concat('module.js'),
+		wrap(moduleWrapper),
+		gulp.dest('dist/')
+	);
 
-function createLogger(name) {
-	return function() {
-		var i = arguments.length,
-			args = new Array(i);
+	return concatPipe(pipe, done);
+}
 
-		while (i--) args[i] = arguments[i];
+function buildBrowserifyFile(done) {
+	var pipe = multipipe(
+		gulp.src(sourceFiles),
+		concat('index.js'),
+		wrap(browserifyWrapper),
+		gulp.dest('dist/')
+	);
 
-		args.unshift(colors.red('>>' + name) + ': ');
-		log.apply(null, args);
-	};
+	return concatPipe(pipe, done);
+}
+
+function buildBundleFile(done) {
+	var pipe = multipipe(
+		gulp.src(bowerFiles()),
+		filterJsFiles,
+		wrap(moduleWrapper),
+		// concat('dependencies.js'),
+		gulp.src(sourceFiles),
+		concat('bundle.js'),
+		wrap(bundleWrapper),
+		gulp.dest('dist/')
+	);
+
+	pipe.on('error', function(err) {
+		taskError('bundle', err);
+		done(err);
+	});
+	pipe.on('end', function() {
+		taskDone('bundle');
+	});
+
+	return pipe;
+}
+
+function concatPipe(pipe, done) {
+	pipe.on('error', function(err) {
+		taskError('concat', err);
+		done(err);
+	});
+
+	pipe.on('end', function() {
+		taskDone('change');
+	});
+
+	return pipe;
+}
+
+
+function minifyModuleFiles(done) {
+	return minError(multipipe(
+		gulp.src('dist/module.js'),
+		uglify(),
+		rename(renameOptions),
+		gulp.dest('dist/')
+	), done);
+}
+
+
+function minifyBundleFiles(done) {
+	return minError(multipipe(
+		gulp.src('dist/bundle.js'),
+		uglify(),
+		rename(renameOptions),
+		gulp.dest('dist/')
+	), done);
+}
+
+function minError(pipe, done) {
+	pipe.on('error', function(err) {
+		taskError('minify', err);
+		done(err);
+	});
+
+	pipe.on('end', function() {
+		taskDone('minify');
+	});
+
+	return pipe;
 }

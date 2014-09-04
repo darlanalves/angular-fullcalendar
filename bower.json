@@ -1,0 +1,36 @@
+{
+	"name": "angular-fullcalendar",
+	"version": "0.1.0",
+	"description": "FullCalendar integration with AngularJS",
+	"main": "./dist/module.js",
+	"keywords": [
+		"angularjs",
+		"ngmodule"
+	],
+	"license": "ISC",
+	"private": false,
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"vendor",
+		"test"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/darlanalves/angular-fullcalendar.git"
+	},
+	"dependencies": {
+		"fullcalendar": "~2.1.1"
+	},
+	"xoverrides": {
+		"fullcalendar": {
+			"ignore": ["!dist/fullcalendar.js"]
+		},
+		"jquery": {
+			"ignore": ["!dist/jquery.js"]
+		},
+		"moment": {
+			"ignore": ["!moment.js"]
+		}
+	}
+}

@@ -1,4 +1,4 @@
-$module.value('CalendarViewModes', {
+$module.value('FullCalendarViewModes', {
 	MODE_MONTH: 'month',
 	MODE_BASIC_WEEK: 'basicWeek',
 	MODE_BASIC_DAY: 'basicDay',

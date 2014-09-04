@@ -6,7 +6,7 @@ module.exports = function(config) {
 
 		// test results reporter to use
 		// possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-		reporters: ['progress', 'coverage'],
+		reporters: ['progress' /*, 'coverage'*/ ],
 
 		// level of logging
 		// possible values: config.LOG_DISABLE || LOG_ERROR || LOG_WARN || LOG_INFO || LOG_DEBUG
@@ -27,19 +27,11 @@ module.exports = function(config) {
 		},
 
 		files: [
-			'public/lib/angular.js',
-			'public/lib/angular-mocks.js',
-			'public/lib/angular-ui-router.js',
-			'dist/fullcalendar.js',
-			'web/module.js',
-			'web/**/*.js',
-			'test/unit/web/**/*.spec.js',
-			'test/unit/web/run.js',
-			'public/mocks.js'
-		],
-
-		exclude: [
-			'src/web/routes.js'
+			'vendor/angular/angular.js',
+			'vendor/angular-mocks/angular-mocks.js',
+			'test/mock/fullcalendar.js',
+			'dist/module.js',
+			'test/unit/**/*.spec.js'
 		],
 
 		urlRoot: '/__karma__/',
@@ -61,13 +53,13 @@ module.exports = function(config) {
 		port: 9800,
 
 		// NOTE: the "**/" portion is essential to get the coverage results
-		preprocessors: {
-			'**/web/**/*.js': 'coverage'
-		},
+		// preprocessors: {
+		// '**/src/**/*.js': 'coverage'
+		// },
 
 		coverageReporter: {
 			type: 'html',
-			dir: 'test/coverage/web/'
+			dir: 'test/coverage/'
 		}
 	});
 };
